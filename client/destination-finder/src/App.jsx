@@ -6,10 +6,7 @@ import Navbar from "./components/navbar";
 import LoginPage from "./components/login";
 import SignUpPage from "./components/signup";
 import LeafletMap from "./components/map";
-
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <Router>
       <div>

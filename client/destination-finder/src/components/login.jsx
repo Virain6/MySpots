@@ -1,14 +1,41 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const { login } = useAuth(); // Access the login function from context
 
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Prevent the default form submission
-    console.log("Email:", email);
-    console.log("Password:", password);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    if (!email || !password) {
+      setError("Email and password are required.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:3001/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        login(data.token, { email }); // Save the token and user info globally
+        alert("Login successful!");
+      } else {
+        setError(data.error || "Login failed");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -20,7 +47,8 @@ const LoginPage = () => {
         <h2 className="text-2xl font-semibold text-center text-violet-950">
           Login to Your Account
         </h2>
-        <form className="mt-6" onSubmit={handleSubmit}>
+        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        <form className="mt-6" onSubmit={handleLogin}>
           {/* Email Input */}
           <div className="mb-4">
             <label
