@@ -8,7 +8,7 @@ const LandingPage = () => {
       {/* Main Content */}
       <main className="flex flex-1 flex-col items-center justify-center text-center px-4">
         <h1 className="text-3xl lg:text-5xl font-bold text-slate-100 mb-4">
-          Welcome to Destination Finder
+          Welcome to My Spots
         </h1>
         <p className="text-lg lg:text-xl text-slate-400 mb-6">
           This websites is for finding and keeping track of your favourite

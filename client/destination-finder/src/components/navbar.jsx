@@ -20,11 +20,11 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="relative bg-violet-950 text-white h-16">
+    <nav className="relative bg-violet-950 text-white h-16 z-20">
       {/* Navbar Header */}
       <div className="flex items-center justify-between px-6 py-4">
         <Link to="/" className="text-lg font-semibold">
-          Destination Finder
+          My Spots
         </Link>
 
         <div className="lg:hidden">
@@ -59,7 +59,7 @@ const Navbar = () => {
               to="/signup"
               className="text-slate-400 hover:text-green-600 px-3 py-2 text-base font-medium"
             >
-              SignUp
+              Sign Up
             </Link>
           </div>
         )}
@@ -69,7 +69,7 @@ const Navbar = () => {
               to="/map"
               className="text-slate-400 hover:text-green-600 px-3 py-2 text-base font-medium"
             >
-              Home
+              Map
             </Link>
             <Link
               to="/"
@@ -107,7 +107,7 @@ const Navbar = () => {
             className="block py-2 px-4 hover:bg-purple-400"
             onClick={() => setMenuOpen(false)} // Close menu on click
           >
-            Home
+            Map
           </Link>
           <Link
             to="/"
