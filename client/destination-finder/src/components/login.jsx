@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const { login } = useAuth(); // Access the login function from context
+  const navigate = useNavigate(); // Hook to programmatically navigate
 
+  // Handle the login function
   const handleLogin = async (e) => {
     e.preventDefault();
 
+    // Check for validation
     if (!email || !password) {
       setError("Email and password are required.");
       return;
@@ -29,7 +32,7 @@ const LoginPage = () => {
 
       if (response.ok) {
         login(data.token, { email }); // Save the token and user info globally
-        alert("Login successful!");
+        navigate("/map"); // Redirect to the map page
       } else {
         setError(data.error || "Login failed");
       }

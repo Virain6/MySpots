@@ -1,23 +1,16 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // Assuming you use an AuthContext to manage auth
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
+  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-
-  const handleAuth = () => {
-    if (isLoggedIn) {
-      // Perform logout logic here
-      console.log("User logged out");
-    } else {
-      // Perform login logic here
-      console.log("User logged in");
-    }
-    setIsLoggedIn(!isLoggedIn); // Toggle login state
-  };
+  const { user, logout } = useAuth(); // Use `useAuth` to get the user and logout function
+  const isLoggedIn = !!user; // Check if a user is logged in
 
   return (
     <nav className="relative bg-violet-950 text-white h-16 z-20">
@@ -46,6 +39,7 @@ const Navbar = () => {
             </svg>
           </button>
         </div>
+
         {/* Desktop Menu */}
         {!isLoggedIn && (
           <div className="hidden lg:flex space-x-6">
@@ -64,19 +58,32 @@ const Navbar = () => {
           </div>
         )}
         {isLoggedIn && (
-          <div className="hidden lg:flex space-x-6">
+          <div className="hidden lg:flex items-center space-x-6">
             <Link
               to="/map"
               className="text-slate-400 hover:text-green-600 px-3 py-2 text-base font-medium"
             >
               Map
             </Link>
-            <Link
-              to="/"
-              className="text-slate-400 hover:text-green-600 px-3 py-2 text-base font-medium"
-            >
-              Logout
-            </Link>
+            {/* Nickname and Dropdown */}
+            <div className="relative">
+              <button
+                onClick={toggleDropdown}
+                className="text-slate-400 hover:text-green-600 px-3 py-2 text-base font-medium focus:outline-none"
+              >
+                {user.email} {/* Display the nickname */}
+              </button>
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-md shadow-lg z-10">
+                  <button
+                    onClick={logout}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -109,13 +116,15 @@ const Navbar = () => {
           >
             Map
           </Link>
-          <Link
-            to="/"
-            className="block py-2 px-4 hover:bg-purple-400"
-            onClick={() => setMenuOpen(false)} // Close menu on click
+          <button
+            onClick={() => {
+              setMenuOpen(false); // Close menu
+              logout(); // Logout user
+            }}
+            className="block w-full text-left py-2 px-4 hover:bg-purple-400"
           >
             Logout
-          </Link>
+          </button>
         </div>
       )}
     </nav>

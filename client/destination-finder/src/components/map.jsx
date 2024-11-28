@@ -1,69 +1,14 @@
 import React, { useEffect, useState } from "react";
 import L from "leaflet"; // Import Leaflet
 import "leaflet/dist/leaflet.css"; // Import Leaflet CSS
-
-const locations = [
-  {
-    id: 1,
-    name: "Toronto",
-    country: "Canada",
-    latitude: 43.6532,
-    longitude: -79.3832,
-  },
-  {
-    id: 2,
-    name: "New York",
-    country: "USA",
-    latitude: 40.7128,
-    longitude: -74.006,
-  },
-  {
-    id: 3,
-    name: "London",
-    country: "UK",
-    latitude: 51.5074,
-    longitude: -0.1278,
-  },
-  {
-    id: 4,
-    name: "Sydney",
-    country: "Australia",
-    latitude: -33.8688,
-    longitude: 151.2093,
-  },
-  {
-    id: 5,
-    name: "Tokyo",
-    country: "Japan",
-    latitude: 35.6895,
-    longitude: 139.6917,
-  },
-  {
-    id: 6,
-    name: "Vancouver",
-    country: "Canada",
-    latitude: 49.2827,
-    longitude: -123.1207,
-  },
-  {
-    id: 7,
-    name: "Los Angeles",
-    country: "USA",
-    latitude: 34.0522,
-    longitude: -118.2437,
-  },
-  {
-    id: 8,
-    name: "Paris",
-    country: "France",
-    latitude: 48.8566,
-    longitude: 2.3522,
-  },
-];
+import { fetchLocations } from "./utils/api";
 
 const LeafletMap = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(locations[0]);
+  const [locations, setLocations] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState(
+    locations[0] ? locations[0] : { latitude: 0, longitude: 0 }
+  );
   const [map, setMap] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchBy, setSearchBy] = useState("name");
@@ -72,6 +17,19 @@ const LeafletMap = () => {
   const [newListName, setNewListName] = useState(""); // For creating a new list
   const [showPopup, setShowPopup] = useState(false); // Toggle popup visibility
   const [selectedList, setSelectedList] = useState(""); // Currently selected list to view destinations
+
+  useEffect(() => {
+    const loadLocations = async () => {
+      const fetchedLocations = await fetchLocations();
+      setLocations(fetchedLocations);
+
+      if (fetchedLocations.length > 0) {
+        setSelectedLocation(fetchedLocations[0]);
+      }
+    };
+
+    loadLocations();
+  }, []);
 
   useEffect(() => {
     const initialMap = L.map("map").setView(

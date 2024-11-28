@@ -1,7 +1,10 @@
 const express = require("express");
 const cors = require("cors");
+
+//routes
 const registerRoute = require("./routes/register");
 const loginRoute = require("./routes/login");
+const locationsRoute = require("./routes/locations");
 
 const app = express();
 
@@ -11,8 +14,8 @@ app.use(express.json());
 
 // Routes
 app.use("/api", registerRoute);
-
 app.use("/api", loginRoute);
+app.use("/api", locationsRoute);
 
 // Start the Server
 const PORT = 3001;

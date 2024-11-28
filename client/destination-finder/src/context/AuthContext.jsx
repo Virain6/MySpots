@@ -8,10 +8,10 @@ export const useAuth = () => {
   return useContext(AuthContext);
 };
 
-// AuthProvider component to wrap around your app
+// AuthProvider component to wrap around the app
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(null); // State for the token
-  const [user, setUser] = useState(null); // Optional: store user information
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
 
   const login = (token, user) => {
     setToken(token);

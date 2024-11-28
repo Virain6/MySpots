@@ -1,10 +1,14 @@
 import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext"; // Import your AuthContext for login function
+import { useNavigate } from "react-router-dom"; // For programmatic navigation
 
 const SignUpPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [error, setError] = useState("");
+  const { login } = useAuth(); // Access the login function from context
+  const navigate = useNavigate(); // Hook for navigation
 
   const handleRegister = async (e) => {
     e.preventDefault(); // Prevent page reload
@@ -15,6 +19,7 @@ const SignUpPage = () => {
     }
 
     try {
+      // Register the user
       const response = await fetch("http://localhost:3001/api/register", {
         method: "POST",
         headers: {
@@ -26,8 +31,23 @@ const SignUpPage = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Registration successful!");
-        console.log("User ID:", data.userId);
+        // After successful registration, log the user in
+        const loginResponse = await fetch("http://localhost:3001/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }), // Use the same email and password for login
+        });
+
+        const loginData = await loginResponse.json();
+
+        if (loginResponse.ok) {
+          login(loginData.token, { email }); // Save the token and user info globally
+          navigate("/map"); // Redirect to the /map page
+        } else {
+          throw new Error(loginData.error || "Login failed after registration");
+        }
       } else {
         throw new Error(data.error || "Registration failed");
       }
