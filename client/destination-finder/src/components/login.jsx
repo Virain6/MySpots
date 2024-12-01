@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
+import { signInWithCustomToken } from "firebase/auth";
+import { auth } from "../assets/firebase/firebase"; // Import the initialized Firebase Auth
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -31,8 +33,19 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (response.ok) {
-        login(data.token, { email }); // Save the token and user info globally
-        navigate("/map"); // Redirect to the map page
+        // Sign in with the custom token
+        const userCredential = await signInWithCustomToken(auth, data.token);
+
+        // Get the ID token
+        const idToken = await userCredential.user.getIdToken();
+
+        console.log("ID Token:", idToken); // Debugging log to verify the token
+
+        // Save the ID token and user info globally
+        login(idToken, { email });
+
+        // Redirect to the map page
+        navigate("/map");
       } else {
         setError(data.error || "Login failed");
       }

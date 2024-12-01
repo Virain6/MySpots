@@ -5,6 +5,7 @@ const cors = require("cors");
 const registerRoute = require("./routes/register");
 const loginRoute = require("./routes/login");
 const locationsRoute = require("./routes/locations");
+const listsRoute = require("./routes/lists");
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use("/api", registerRoute);
 app.use("/api", loginRoute);
 app.use("/api", locationsRoute);
+app.use("/api", listsRoute);
 
 // Start the Server
 const PORT = 3001;

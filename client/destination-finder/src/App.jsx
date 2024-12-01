@@ -6,13 +6,14 @@ import Navbar from "./components/navbar";
 import LoginPage from "./components/login";
 import SignUpPage from "./components/signup";
 import LeafletMap from "./components/map";
+import CreateListForm from "./testComponents/test";
 function App() {
   return (
     <Router>
       <div>
         <Navbar />
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<CreateListForm />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/map" element={<LeafletMap />} />
