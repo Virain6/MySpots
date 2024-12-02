@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext"; // Import your AuthContext for login function
 import { useNavigate } from "react-router-dom"; // For programmatic navigation
 
 const SignUpPage = () => {
@@ -7,7 +6,7 @@ const SignUpPage = () => {
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [error, setError] = useState("");
-  const { login } = useAuth(); // Access the login function from context
+  const [success, setSuccess] = useState("");
   const navigate = useNavigate(); // Hook for navigation
 
   const handleRegister = async (e) => {
@@ -31,28 +30,18 @@ const SignUpPage = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // After successful registration, log the user in
-        const loginResponse = await fetch("http://localhost:3001/api/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }), // Use the same email and password for login
-        });
-
-        const loginData = await loginResponse.json();
-
-        if (loginResponse.ok) {
-          login(loginData.token, { email }); // Save the token and user info globally
-          navigate("/map"); // Redirect to the /map page
-        } else {
-          throw new Error(loginData.error || "Login failed after registration");
-        }
+        // Inform the user to verify their email
+        setSuccess(
+          "Registration successful! Please check your email and verify your account before logging in."
+        );
+        setError("");
+        setTimeout(() => navigate("/login"), 5000); // Redirect to login after 5 seconds
       } else {
         throw new Error(data.error || "Registration failed");
       }
     } catch (err) {
       setError(err.message);
+      setSuccess("");
     }
   };
 
@@ -63,6 +52,7 @@ const SignUpPage = () => {
           Create Your Account
         </h2>
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        {success && <p className="text-green-500 text-sm mt-2">{success}</p>}
         <form className="mt-6" onSubmit={handleRegister}>
           {/* Nickname */}
           <div className="mb-4">

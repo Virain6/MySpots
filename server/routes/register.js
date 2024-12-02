@@ -28,12 +28,20 @@ router.post("/register", async (req, res) => {
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    res
-      .status(201)
-      .json({
-        message: "User registered successfully",
-        userId: userRecord.uid,
-      });
+    // Generate an email verification link
+    const verificationLink = await admin
+      .auth()
+      .generateEmailVerificationLink(email);
+
+    // Print the verification link in the console
+    console.log(`Verification link for ${email}: ${verificationLink}`);
+
+    // Send response to the client
+    res.status(201).json({
+      message: "User registered successfully. Please verify your email.",
+      userId: userRecord.uid,
+      verificationLink, // Optional: Include the link in the response for debugging (not recommended for production)
+    });
   } catch (error) {
     console.error("Error registering user:", error);
     res.status(500).json({ error: error.message });

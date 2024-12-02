@@ -3,7 +3,7 @@ import LocationList from "./locationList";
 import ListsTab from "./listTab"; // Import the ListsTab component
 import { fetchLocations } from "../utils/api";
 
-const ExpandableBox = ({ onLocationSelect }) => {
+const ExpandableBox = ({ onLocationSelect, onOpenCreateList, onEditList }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState("search"); // "search" or "lists"
   const [locations, setLocations] = useState([]);
@@ -13,40 +13,56 @@ const ExpandableBox = ({ onLocationSelect }) => {
     country: "",
   });
   const [resultLimit, setResultLimit] = useState(5);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
+  // Fetch the top 5 locations immediately on component load
   useEffect(() => {
-    // Fetch locations
-    const loadLocations = async () => {
-      const fetchedLocations = await fetchLocations();
-      setLocations(fetchedLocations);
+    const loadInitialLocations = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const fetchedLocations = await fetchLocations({}, 5); // Fetch top 5
+        setLocations(fetchedLocations);
+      } catch (error) {
+        console.error("Error fetching initial locations:", error);
+        setError("Failed to load locations. Please try again.");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    loadLocations();
+    loadInitialLocations();
   }, []);
 
-  // Filter locations dynamically based on multiple filters
-  const filteredLocations = locations
-    .filter((location) => {
-      return (
-        (!filters.name ||
-          location.name.toLowerCase().includes(filters.name.toLowerCase())) &&
-        (!filters.region ||
-          location.region
-            .toLowerCase()
-            .includes(filters.region.toLowerCase())) &&
-        (!filters.country ||
-          location.country
-            .toLowerCase()
-            .includes(filters.country.toLowerCase()))
-      );
-    })
-    .slice(0, resultLimit); // Limit results
+  // Fetch locations based on filters and limit
+  const handleSearch = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const fetchedLocations = await fetchLocations(filters, resultLimit);
+      setLocations(fetchedLocations);
+    } catch (error) {
+      console.error("Error fetching locations:", error);
+      setError("Failed to load locations. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFilterChange = (field, value) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
-      [field]: value,
+      [field]: value.toLowerCase(), // Ensure lowercase values are sent
     }));
+  };
+
+  const handleIncrementLimit = () => {
+    setResultLimit((prev) => prev + 5);
+  };
+
+  const handleDecrementLimit = () => {
+    setResultLimit((prev) => Math.max(5, prev - 5));
   };
 
   return (
@@ -138,36 +154,49 @@ const ExpandableBox = ({ onLocationSelect }) => {
                 </div>
               </div>
 
+              <button
+                onClick={handleSearch}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Search
+              </button>
+
               {/* Incrementer */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4 mt-4">
                 <label className="text-gray-50">Number of Results:</label>
                 <div className="flex items-center">
                   <button
                     className="px-4 py-2 bg-gray-300 rounded-l hover:bg-gray-400"
-                    onClick={() =>
-                      setResultLimit((prev) => Math.max(5, prev - 5))
-                    }
+                    onClick={handleDecrementLimit}
                   >
                     -
                   </button>
                   <span className="px-4 py-2 bg-gray-200">{resultLimit}</span>
                   <button
                     className="px-4 py-2 bg-gray-300 rounded-r hover:bg-gray-400"
-                    onClick={() => setResultLimit((prev) => prev + 5)}
+                    onClick={handleIncrementLimit}
                   >
                     +
                   </button>
                 </div>
               </div>
 
-              {/* Location List */}
-              <LocationList
-                locations={filteredLocations}
-                onLocationClick={onLocationSelect}
-              />
+              {loading ? (
+                <p className="text-gray-50">Loading locations...</p>
+              ) : error ? (
+                <p className="text-red-400">{error}</p>
+              ) : (
+                <LocationList
+                  locations={locations}
+                  onLocationClick={onLocationSelect}
+                />
+              )}
             </div>
           ) : (
-            <ListsTab /> // Render ListsTab for both user and public lists
+            <ListsTab
+              onOpenCreateList={onOpenCreateList}
+              onEditList={onEditList}
+            />
           )}
         </div>
       )}

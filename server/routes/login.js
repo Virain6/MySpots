@@ -10,11 +10,19 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    // Verify the user with Firebase Authentication
+    // Get the user record by email
     const user = await admin.auth().getUserByEmail(email);
 
-    // Firebase Admin SDK doesn't verify passwords directly; handle password verification client-side.
-    // Alternative: Generate a custom Firebase token for the user
+    // Check if the email is verified
+    if (!user.emailVerified) {
+      return res
+        .status(403)
+        .json({
+          error: "Email not verified. Please verify your email to log in.",
+        });
+    }
+
+    // Generate a custom Firebase token for the user
     const customToken = await admin.auth().createCustomToken(user.uid);
 
     res.status(200).json({ token: customToken, message: "Login successful!" });

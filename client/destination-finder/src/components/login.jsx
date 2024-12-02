@@ -15,7 +15,6 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Check for validation
     if (!email || !password) {
       setError("Email and password are required.");
       return;
@@ -33,21 +32,18 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Sign in with the custom token
         const userCredential = await signInWithCustomToken(auth, data.token);
-
-        // Get the ID token
         const idToken = await userCredential.user.getIdToken();
-
-        console.log("ID Token:", idToken); // Debugging log to verify the token
 
         // Save the ID token and user info globally
         login(idToken, { email });
 
         // Redirect to the map page
         navigate("/map");
+      } else if (response.status === 403) {
+        setError("Please verify your email before logging in.");
       } else {
-        setError(data.error || "Login failed");
+        setError(data.error || "Login failed.");
       }
     } catch (err) {
       setError(err.message);
@@ -65,7 +61,6 @@ const LoginPage = () => {
         </h2>
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         <form className="mt-6" onSubmit={handleLogin}>
-          {/* Email Input */}
           <div className="mb-4">
             <label
               htmlFor="email"
@@ -82,7 +77,6 @@ const LoginPage = () => {
               className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             />
           </div>
-          {/* Password Input */}
           <div className="mb-6">
             <label
               htmlFor="password"
@@ -99,7 +93,6 @@ const LoginPage = () => {
               className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             />
           </div>
-          {/* Submit Button */}
           <button
             type="submit"
             className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
@@ -107,7 +100,6 @@ const LoginPage = () => {
             Login
           </button>
         </form>
-        {/* Additional Links */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{" "}
