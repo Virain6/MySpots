@@ -64,9 +64,6 @@ const AccountSettings = () => {
         <p>
           <strong>Nickname:</strong> {userDetails.nickname}
         </p>
-        <p>
-          <strong>Email:</strong> {userDetails.email}
-        </p>
       </div>
 
       <div>

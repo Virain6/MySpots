@@ -1,6 +1,14 @@
 import React from "react";
 
 const LocationDetails = ({ location, onClearLocation }) => {
+  const handleDuckDuckGoSearch = () => {
+    if (location?.name) {
+      const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(
+        location.name + " " + location.country
+      )}`;
+      window.open(searchUrl, "_blank"); // Opens the search in a new tab
+    }
+  };
   return (
     <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-3/4 bg-slate-500 text-white rounded-lg shadow-lg p-4 z-20 max-h-60 overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
@@ -93,6 +101,14 @@ const LocationDetails = ({ location, onClearLocation }) => {
               <span className="font-semibold text-gray-300">Famous Foods:</span>{" "}
               {location.famousFoods.join(", ")}
             </p>
+          </div>
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={handleDuckDuckGoSearch}
+              className="bg-violet-600 text-white py-2 px-4 rounded hover:bg-violet-700"
+            >
+              Search "{location.name}" on DuckDuckGo
+            </button>
           </div>
         </>
       ) : (
