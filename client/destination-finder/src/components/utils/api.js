@@ -20,6 +20,25 @@ export const fetchLocations = async (filters = {}, limit = 5) => {
   }
 };
 
+export const fetchUserProfile = async (token) => {
+  try {
+    const response = await fetch("http://localhost:3001/api/users/profile", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch user profile");
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error("Error fetching user profile:", err);
+    throw err;
+  }
+};
+
 export const fetchUserLists = async (token) => {
   console.log("Token being sent:", token); // Debugging log
   try {

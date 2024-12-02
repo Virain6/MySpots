@@ -3,19 +3,33 @@ import {
   fetchUserLists,
   fetchPublicLists,
   fetchDestinations,
+  fetchUserProfile,
 } from "../utils/api";
 import { useAuth } from "../../context/AuthContext";
 
 const ListsTab = ({ onEditList, onOpenCreateList }) => {
   const [userLists, setUserLists] = useState([]);
   const [publicLists, setPublicLists] = useState([]);
+  const [nickname, setNickname] = useState("User");
   const [activeListTab, setActiveListTab] = useState("user");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const { token, loading: authLoading } = useAuth();
 
-  // Fetch lists and resolve destination names
+  // Fetch user profile to retrieve nickname
+  const loadUserProfile = async () => {
+    if (!token) return;
+
+    try {
+      const userProfile = await fetchUserProfile(token);
+      setNickname(userProfile.nickname || "User");
+    } catch (err) {
+      console.error("Failed to fetch user profile:", err);
+    }
+  };
+
+  // Fetch user and public lists
   const loadLists = async () => {
     if (!token) {
       setError("User is not logged in. Token is missing.");
@@ -63,6 +77,7 @@ const ListsTab = ({ onEditList, onOpenCreateList }) => {
 
   useEffect(() => {
     if (!authLoading) {
+      loadUserProfile();
       loadLists();
     }
   }, [authLoading, token]);
@@ -94,11 +109,14 @@ const ListsTab = ({ onEditList, onOpenCreateList }) => {
           <div
             key={list.id}
             className="mb-4 rounded-md bg-purple-500 hover:bg-purple-600 py-2 px-4 cursor-pointer"
-            onClick={() => activeListTab === "user" && onEditList(list)} // Trigger edit modal
+            onClick={() => activeListTab === "user" && onEditList(list)}
           >
             <h4 className="text-md font-semibold text-white">
               {list.name} ({list.isPublic ? "Public" : "Private"})
             </h4>
+            <p className="text-sm text-gray-100">
+              Created by: {list.nickname || "Unknown"}
+            </p>
             <p className="text-sm text-gray-100">{list.description}</p>
             {list.destinations.length > 0 ? (
               <ul className="text-sm text-gray-200 ml-4">
@@ -117,6 +135,10 @@ const ListsTab = ({ onEditList, onOpenCreateList }) => {
 
   return (
     <div>
+      <h3 className="text-lg font-bold text-violet-500 mb-4">
+        Welcome, {nickname}!
+      </h3>
+
       {/* Tabs for switching between My Lists and Public Lists */}
       <div className="flex justify-around mb-4">
         <button
