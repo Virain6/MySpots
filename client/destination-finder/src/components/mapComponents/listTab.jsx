@@ -7,7 +7,7 @@ import {
 } from "../utils/api";
 import { useAuth } from "../../context/AuthContext";
 
-const ListsTab = ({ onEditList, onOpenCreateList }) => {
+const ListsTab = ({ onEditList, onOpenCreateList, handleOpenPopup }) => {
   const [userLists, setUserLists] = useState([]);
   const [publicLists, setPublicLists] = useState([]);
   const [nickname, setNickname] = useState("User");
@@ -75,6 +75,11 @@ const ListsTab = ({ onEditList, onOpenCreateList }) => {
     }
   };
 
+  const handleViewOnMap = (list) => {
+    console.log("View on Map clicked. List data:", list); // Debugging log
+    handleOpenPopup(list); // Trigger popup with selected list data
+  };
+
   useEffect(() => {
     if (!authLoading) {
       loadUserProfile();
@@ -109,7 +114,6 @@ const ListsTab = ({ onEditList, onOpenCreateList }) => {
           <div
             key={list.id}
             className="mb-4 rounded-md bg-purple-500 hover:bg-purple-600 py-2 px-4 cursor-pointer"
-            onClick={() => activeListTab === "user" && onEditList(list)}
           >
             <h4 className="text-md font-semibold text-white">
               {list.name} ({list.isPublic ? "Public" : "Private"})
@@ -127,6 +131,20 @@ const ListsTab = ({ onEditList, onOpenCreateList }) => {
             ) : (
               <p className="text-gray-300">No destinations added yet.</p>
             )}
+            {activeListTab === "user" && (
+              <button
+                onClick={() => activeListTab === "user" && onEditList(list)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all"
+              >
+                Edit List
+              </button>
+            )}
+            <button
+              onClick={() => handleViewOnMap(list)}
+              className="px-4 py-2 ml-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300 transition-all"
+            >
+              View on Map
+            </button>
           </div>
         ))}
       </div>

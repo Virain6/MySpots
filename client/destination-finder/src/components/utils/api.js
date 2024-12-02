@@ -39,6 +39,59 @@ export const fetchUserProfile = async (token) => {
   }
 };
 
+// Fetch reviews for a list
+export const fetchReviews = async (listId, token) => {
+  if (!token) throw new Error("Authentication token is missing.");
+  const response = await fetch(
+    `http://localhost:3001/api/lists/${listId}/reviews`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`, // Include the Bearer token
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to fetch reviews.");
+  }
+
+  return response.json();
+};
+// Add a new review
+export const addReview = async (listID, review, token) => {
+  const response = await fetch("http://localhost:3001/api/reviews", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ ...review, listID }),
+  });
+  if (!response.ok) throw new Error("Failed to add review.");
+  return response.json();
+};
+
+export const updatePassword = async (
+  token,
+  { currentPassword, newPassword }
+) => {
+  const response = await fetch(
+    "http://localhost:3001/api/users/update-password",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }
+  );
+  if (!response.ok) {
+    throw new Error("Failed to update password");
+  }
+};
+
 export const fetchUserLists = async (token) => {
   console.log("Token being sent:", token); // Debugging log
   try {

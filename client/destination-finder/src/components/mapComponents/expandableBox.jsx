@@ -3,7 +3,12 @@ import LocationList from "./locationList";
 import ListsTab from "./listTab"; // Import the ListsTab component
 import { fetchLocations } from "../utils/api";
 
-const ExpandableBox = ({ onLocationSelect, onOpenCreateList, onEditList }) => {
+const ExpandableBox = ({
+  onLocationSelect,
+  onOpenCreateList,
+  onEditList,
+  handleOpenPopup,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState("search"); // "search" or "lists"
   const [locations, setLocations] = useState([]);
@@ -196,6 +201,7 @@ const ExpandableBox = ({ onLocationSelect, onOpenCreateList, onEditList }) => {
             <ListsTab
               onOpenCreateList={onOpenCreateList}
               onEditList={onEditList}
+              handleOpenPopup={handleOpenPopup}
             />
           )}
         </div>

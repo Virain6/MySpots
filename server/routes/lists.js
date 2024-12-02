@@ -5,6 +5,7 @@ const db = admin.firestore(); // Firestore Database
 
 // Middleware to verify Firebase token
 const verifyToken = async (req, res, next) => {
+  console.log("Middleware: verifyToken called");
   const token = req.headers.authorization?.split(" ")[1]; // Extract the token
   if (!token) {
     console.log("No token provided.");
@@ -12,10 +13,9 @@ const verifyToken = async (req, res, next) => {
   }
 
   try {
-    console.log("Token received:", token); // Log the raw token
     const decodedToken = await admin.auth().verifyIdToken(token); // Verify the token
-    console.log("Decoded Token:", decodedToken); // Log the decoded token
     req.user = decodedToken; // Attach user info to request
+    console.log("Middleware: verifyToken successful");
     next();
   } catch (err) {
     console.error("Error verifying token:", err.message);
@@ -25,9 +25,13 @@ const verifyToken = async (req, res, next) => {
 
 // Helper function to fetch nickname
 const getNicknameByUserID = async (userID) => {
+  console.log(`Helper: getNicknameByUserID called for userID ${userID}`);
   try {
     const userDoc = await db.collection("users").doc(userID).get();
-    return userDoc.exists ? userDoc.data().nickname : "Unknown";
+    if (userDoc.exists) {
+      return userDoc.data().nickname;
+    }
+    return "Unknown";
   } catch (error) {
     console.error("Error fetching user nickname:", error.message);
     return "Unknown";
@@ -36,6 +40,7 @@ const getNicknameByUserID = async (userID) => {
 
 // Add destinations to a list
 router.post("/lists/:id/destinations", verifyToken, async (req, res) => {
+  console.log("API: POST /lists/:id/destinations called");
   const listId = req.params.id;
   const { destinationId } = req.body;
 
@@ -71,6 +76,7 @@ router.post("/lists/:id/destinations", verifyToken, async (req, res) => {
 
 // Get full destination details for a specific list
 router.get("/lists/:id/destinations", verifyToken, async (req, res) => {
+  console.log("API: GET /lists/:id/destinations called");
   const listId = req.params.id;
 
   try {
@@ -110,6 +116,7 @@ router.get("/lists/:id/destinations", verifyToken, async (req, res) => {
 
 // Create a new list
 router.post("/lists", verifyToken, async (req, res) => {
+  console.log("API: POST /lists called");
   const { name, description, isPublic, destinationIds } = req.body;
 
   if (!name) {
@@ -150,6 +157,7 @@ router.post("/lists", verifyToken, async (req, res) => {
 
 // Get all lists for the logged-in user
 router.get("/lists", verifyToken, async (req, res) => {
+  console.log("API: GET /lists called");
   try {
     const listsSnapshot = await db
       .collection("lists")
@@ -173,6 +181,7 @@ router.get("/lists", verifyToken, async (req, res) => {
 
 // Get all public lists
 router.get("/lists/public", async (req, res) => {
+  console.log("API: GET /lists/public called");
   try {
     const publicListsSnapshot = await db
       .collection("lists")
@@ -196,6 +205,7 @@ router.get("/lists/public", async (req, res) => {
 
 // Update list
 router.put("/lists/:id", verifyToken, async (req, res) => {
+  console.log("API: PUT /lists/:id called");
   const { id } = req.params;
   const { name, description, isPublic, destinationIds } = req.body;
 
@@ -228,6 +238,7 @@ router.put("/lists/:id", verifyToken, async (req, res) => {
 
 // Delete a list
 router.delete("/lists/:id", verifyToken, async (req, res) => {
+  console.log("API: DELETE /lists/:id called");
   const listId = req.params.id;
 
   try {

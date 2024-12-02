@@ -5,6 +5,7 @@ import ExpandableBox from "./mapComponents/expandableBox";
 import LocationDetails from "./mapComponents/locationDetails";
 import CreateListForm from "./mapComponents/createList";
 import EditListModal from "./mapComponents/editListModal";
+import ListPopup from "./mapComponents/listPopup";
 import { updateListDetails } from "./utils/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -13,6 +14,7 @@ const LeafletMap = () => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [isCreateListOpen, setIsCreateListOpen] = useState(false);
   const [editingList, setEditingList] = useState(null);
+  const [popupData, setPopupData] = useState(null);
   const { token } = useAuth(); // Access the token from AuthContext
 
   useEffect(() => {
@@ -61,6 +63,15 @@ const LeafletMap = () => {
     setEditingList(null); // Close the modal
   };
 
+  const handleOpenPopup = (list) => {
+    console.log("Popup data:", list);
+    setPopupData(list);
+  };
+
+  const handleClosePopup = () => {
+    setPopupData(null); // Close the modal
+  };
+
   const handleSaveList = async (updatedList) => {
     try {
       const response = await updateListDetails(token, updatedList);
@@ -107,10 +118,18 @@ const LeafletMap = () => {
         </div>
       )}
 
+      {popupData && (
+        <ListPopup
+          list={popupData}
+          closePopup={handleClosePopup} // Close popup
+        />
+      )}
+
       <ExpandableBox
         onLocationSelect={handleLocationSelect}
         onOpenCreateList={toggleCreateList}
         onEditList={handleEditList}
+        handleOpenPopup={handleOpenPopup}
       />
     </div>
   );

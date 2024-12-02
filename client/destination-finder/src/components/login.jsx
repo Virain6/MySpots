@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { signInWithCustomToken } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../assets/firebase/firebase"; // Import the initialized Firebase Auth
 
 const LoginPage = () => {
@@ -11,7 +11,6 @@ const LoginPage = () => {
   const { login } = useAuth(); // Access the login function from context
   const navigate = useNavigate(); // Hook to programmatically navigate
 
-  // Handle the login function
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -21,18 +20,25 @@ const LoginPage = () => {
     }
 
     try {
+      // Verify email and password using Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      // Request a custom token from the backend
       const response = await fetch("http://localhost:3001/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        const userCredential = await signInWithCustomToken(auth, data.token);
         const idToken = await userCredential.user.getIdToken();
 
         // Save the ID token and user info globally
@@ -40,13 +46,11 @@ const LoginPage = () => {
 
         // Redirect to the map page
         navigate("/map");
-      } else if (response.status === 403) {
-        setError("Please verify your email before logging in.");
       } else {
         setError(data.error || "Login failed.");
       }
     } catch (err) {
-      setError(err.message);
+      setError("Invalid email or password.");
     }
   };
 

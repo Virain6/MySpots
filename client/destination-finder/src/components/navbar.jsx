@@ -1,16 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // Assuming you use an AuthContext to manage auth
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [nickname, setNickname] = useState("User"); // Default nickname
+
+  const { user, logout, getProfile } = useAuth(); // Use `useAuth` to get the user, logout function, and profile fetcher
+  const isLoggedIn = !!user; // Check if a user is logged in
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      const fetchProfile = async () => {
+        try {
+          const profile = await getProfile();
+          setNickname(profile.nickname || "User");
+        } catch (err) {
+          console.error("Error fetching profile:", err);
+        }
+      };
+      fetchProfile();
+    }
+  }, [isLoggedIn, getProfile]);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
-
-  const { user, logout } = useAuth(); // Use `useAuth` to get the user and logout function
-  const isLoggedIn = !!user; // Check if a user is logged in
 
   return (
     <nav className="relative bg-violet-950 text-white h-16 z-20">
@@ -71,10 +86,16 @@ const Navbar = () => {
                 onClick={toggleDropdown}
                 className="text-slate-400 hover:text-green-600 px-3 py-2 text-base font-medium focus:outline-none"
               >
-                {user.email} {/* Display the nickname */}
+                {nickname} {/* Display the nickname */}
               </button>
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-md shadow-lg z-10">
+                  <Link
+                    to="/account-settings"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Account Settings
+                  </Link>
                   <button
                     onClick={logout}
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100"
@@ -115,6 +136,13 @@ const Navbar = () => {
             onClick={() => setMenuOpen(false)} // Close menu on click
           >
             Map
+          </Link>
+          <Link
+            to="/account-settings"
+            className="block py-2 px-4 hover:bg-purple-400"
+            onClick={() => setMenuOpen(false)} // Close menu on click
+          >
+            Account Settings
           </Link>
           <button
             onClick={() => {
