@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../assets/firebase/firebase"; // Import the initialized Firebase Auth
+import { loginUser } from "./utils/api";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [verificationLink, setVerificationLink] = useState("");
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
   const { login } = useAuth(); // Access the login function from context
   const navigate = useNavigate(); // Hook to programmatically navigate
 
@@ -20,39 +21,30 @@ const LoginPage = () => {
     }
 
     try {
-      // Verify email and password using Firebase Auth
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const { idToken, user } = await loginUser(email, password);
 
-      // Request a custom token from the backend
-      const response = await fetch("http://localhost:3001/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
+      // Save the ID token and user info globally
+      login(idToken, user);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        const idToken = await userCredential.user.getIdToken();
-
-        // Save the ID token and user info globally
-        login(idToken, { email });
-
-        // Redirect to the map page
-        navigate("/map");
-      } else {
-        setError(data.error || "Login failed.");
-      }
+      // Redirect to the map page
+      navigate("/map");
     } catch (err) {
-      setError("Invalid email or password.");
+      // Handle unverified email with a verification link
+      if (err.message.startsWith("http")) {
+        setVerificationLink(err.message);
+        setIsPopupVisible(true);
+        setError("Email not verified. Please verify your email.");
+      } else {
+        setError(
+          err.message === "Firebase: Error (auth/invalid-credential)."
+            ? "Invalid email or password."
+            : err.message
+        );
+      }
     }
   };
+
+  const closePopup = () => setIsPopupVisible(false);
 
   return (
     <div
@@ -116,6 +108,34 @@ const LoginPage = () => {
           </p>
         </div>
       </div>
+
+      {isPopupVisible && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full text-center">
+            <h3 className="text-lg font-semibold text-violet-950 mb-4">
+              Verify Your Email
+            </h3>
+            <p className="text-gray-700 mb-4">
+              Click the link below to verify your email:
+            </p>
+            <a
+              href={verificationLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 underline"
+            >
+              Resend Verification Email
+            </a>
+            <br />
+            <button
+              onClick={closePopup}
+              className="mt-4 bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-md"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

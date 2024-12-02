@@ -1,3 +1,64 @@
+// api.js
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../assets/firebase/firebase";
+
+export const loginUser = async (email, password) => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    const response = await fetch("http://localhost:3001/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      if (response.status === 403 && errorData.verificationLink) {
+        // If the email is unverified, return the verification link
+        throw new Error(errorData.verificationLink);
+      } else {
+        throw new Error(errorData.error || "Failed to log in");
+      }
+    }
+
+    const data = await response.json();
+    const idToken = await userCredential.user.getIdToken();
+    return { idToken, user: { email }, data };
+  } catch (error) {
+    console.error("Login error:", error.message);
+    throw error;
+  }
+};
+
+//delete list
+export const deleteList = async (token, listId) => {
+  try {
+    const response = await fetch(`http://localhost:3001/api/lists/${listId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to delete the list");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error deleting list:", error);
+    throw error;
+  }
+};
+
 export const fetchLocations = async (filters = {}, limit = 5) => {
   try {
     const queryParams = new URLSearchParams({

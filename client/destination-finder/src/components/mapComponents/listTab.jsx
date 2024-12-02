@@ -4,6 +4,7 @@ import {
   fetchPublicLists,
   fetchDestinations,
   fetchUserProfile,
+  deleteList,
 } from "../utils/api";
 import { useAuth } from "../../context/AuthContext";
 
@@ -75,6 +76,30 @@ const ListsTab = ({ onEditList, onOpenCreateList, handleOpenPopup }) => {
     }
   };
 
+  const handleDeleteList = async (listId) => {
+    if (!token) {
+      setError("User is not logged in. Token is missing.");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete this list?")) return;
+
+    setLoading(true);
+
+    try {
+      await deleteList(token, listId);
+      setUserLists((prevLists) =>
+        prevLists.filter((list) => list.id !== listId)
+      );
+      setError("");
+    } catch (err) {
+      console.error("Error deleting list:", err);
+      setError("Failed to delete the list. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleViewOnMap = (list) => {
     console.log("View on Map clicked. List data:", list); // Debugging log
     handleOpenPopup(list); // Trigger popup with selected list data
@@ -132,18 +157,26 @@ const ListsTab = ({ onEditList, onOpenCreateList, handleOpenPopup }) => {
               <p className="text-gray-300">No destinations added yet.</p>
             )}
             {activeListTab === "user" && (
-              <button
-                onClick={() => activeListTab === "user" && onEditList(list)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all"
-              >
-                Edit List
-              </button>
+              <>
+                <button
+                  onClick={() => onEditList(list)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all"
+                >
+                  Edit List
+                </button>
+                <button
+                  onClick={() => handleDeleteList(list.id)}
+                  className="px-4 py-2 ml-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition-all"
+                >
+                  Delete List
+                </button>
+              </>
             )}
             <button
               onClick={() => handleViewOnMap(list)}
               className="px-4 py-2 ml-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300 transition-all"
             >
-              View on Map
+              Reviews
             </button>
           </div>
         ))}

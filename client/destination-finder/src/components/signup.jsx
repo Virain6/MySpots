@@ -7,6 +7,8 @@ const SignUpPage = () => {
   const [nickname, setNickname] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [verificationLink, setVerificationLink] = useState(""); // Store verification link
+  const [isPopupVisible, setIsPopupVisible] = useState(false); // Manage popup visibility
   const navigate = useNavigate(); // Hook for navigation
 
   const handleRegister = async (e) => {
@@ -30,12 +32,15 @@ const SignUpPage = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Inform the user to verify their email
+        // Set the verification link and show the popup
+        setVerificationLink(data.verificationLink);
+        setIsPopupVisible(true);
+
+        // Show success message
         setSuccess(
-          "Registration successful! Please check your email and verify your account before logging in."
+          "Registration successful! Please check your email and verify your account."
         );
         setError("");
-        setTimeout(() => navigate("/login"), 5000); // Redirect to login after 5 seconds
       } else {
         throw new Error(data.error || "Registration failed");
       }
@@ -43,6 +48,11 @@ const SignUpPage = () => {
       setError(err.message);
       setSuccess("");
     }
+  };
+
+  const closePopup = () => {
+    setIsPopupVisible(false);
+    navigate("/login"); // Navigate to login page after closing the popup
   };
 
   return (
@@ -117,6 +127,35 @@ const SignUpPage = () => {
           </button>
         </form>
       </div>
+
+      {/* Popup for Verification Link */}
+      {isPopupVisible && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full text-center">
+            <h3 className="text-lg font-semibold text-violet-950 mb-4">
+              Verify Your Email
+            </h3>
+            <p className="text-gray-700 mb-4">
+              Click the link below to verify your email:
+            </p>
+            <a
+              href={verificationLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 underline"
+            >
+              Verify Email
+            </a>
+            <br></br>
+            <button
+              onClick={closePopup}
+              className="mt-4 bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-md"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
