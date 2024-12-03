@@ -105,6 +105,31 @@ export const updateAdminUserRole = async (token, userId, newRole) => {
   }
 };
 
+export const toggleReviewHidden = async (token, reviewId, hidden) => {
+  try {
+    const response = await fetch(
+      `${ENDPOINTS.REVIEWS}/${reviewId}/toggle-hidden`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ hidden }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to toggle hidden state for the review.");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error toggling hidden flag:", error.message);
+    throw error;
+  }
+};
+
 // Delete a user (Admin Dashboard)
 export const deleteAdminUser = async (token, userId) => {
   try {

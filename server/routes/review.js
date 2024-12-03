@@ -38,6 +38,36 @@ const getUserRole = async (userID) => {
   }
 };
 
+router.put("/reviews/:id/toggle-hidden", verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const { hidden } = req.body;
+
+  try {
+    // Fetch the role of the authenticated user
+    const userRole = await getUserRole(req.user.uid);
+
+    // Check if the user has permission
+    if (!["admin", "manager"].includes(userRole)) {
+      return res
+        .status(403)
+        .json({ error: "Unauthorized to modify review visibility" });
+    }
+
+    const reviewRef = db.collection("reviews").doc(id);
+    const reviewDoc = await reviewRef.get();
+
+    if (!reviewDoc.exists) {
+      return res.status(404).json({ error: "Review not found" });
+    }
+
+    await reviewRef.update({ hidden });
+    res.status(200).json({ id, hidden });
+  } catch (error) {
+    console.error("Error toggling hidden flag:", error.message);
+    res.status(500).json({ error: "Failed to update review visibility" });
+  }
+});
+
 // Add a review to a list
 router.post("/reviews", verifyToken, async (req, res) => {
   console.log("API call: POST /reviews");

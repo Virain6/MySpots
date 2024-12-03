@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchReviews, addReview } from "../utils/api";
+import { fetchReviews, addReview, toggleReviewHidden } from "../utils/api"; // Added toggleReviewHidden API
 import { useAuth } from "../../context/AuthContext";
 
 const ListPopup = ({ list, closePopup }) => {
@@ -9,7 +9,8 @@ const ListPopup = ({ list, closePopup }) => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const { user, token } = useAuth();
 
-  const allowedRoles = ["user", "admin", "manager"];
+  const allowedRoles = ["admin", "manager"];
+  const userRole = user?.role;
 
   useEffect(() => {
     const loadReviews = async () => {
@@ -52,6 +53,26 @@ const ListPopup = ({ list, closePopup }) => {
     }
   };
 
+  const handleToggleHidden = async (reviewId, currentHiddenState) => {
+    try {
+      const updatedReview = await toggleReviewHidden(
+        token,
+        reviewId,
+        !currentHiddenState
+      );
+      setReviews((prevReviews) =>
+        prevReviews.map((review) =>
+          review.id === reviewId
+            ? { ...review, hidden: updatedReview.hidden }
+            : review
+        )
+      );
+    } catch (err) {
+      console.error("Error toggling hidden flag:", err.message);
+      setError("Failed to toggle review visibility. Please try again.");
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-4 rounded shadow-md w-96">
@@ -61,21 +82,39 @@ const ListPopup = ({ list, closePopup }) => {
         <h4 className="mt-4 text-md font-semibold">Reviews</h4>
         {reviews.length > 0 ? (
           <ul className="mt-2">
-            {reviews.map((review, index) => (
-              <li key={index} className="border-b py-2">
-                <strong>Nickname:</strong> {review.nickname}
-                <br />
-                <strong>Rating:</strong> {review.rating}/5
-                <br />
-                <strong>Comment:</strong> {review.comment}
-              </li>
-            ))}
+            {reviews
+              .filter(
+                (review) => !review.hidden || allowedRoles.includes(userRole)
+              )
+              .map((review, index) => (
+                <li key={index} className="border-b py-2">
+                  <strong>Nickname:</strong> {review.nickname}
+                  <br />
+                  <strong>Rating:</strong> {review.rating}/5
+                  <br />
+                  <strong>Comment:</strong> {review.comment}
+                  {allowedRoles.includes(userRole) && (
+                    <div className="mt-2">
+                      <button
+                        onClick={() =>
+                          handleToggleHidden(review.id, review.hidden)
+                        }
+                        className={`px-4 py-2 ${
+                          review.hidden ? "bg-red-500" : "bg-green-500"
+                        } text-white rounded`}
+                      >
+                        {review.hidden ? "Unhide" : "Hide"}
+                      </button>
+                    </div>
+                  )}
+                </li>
+              ))}
           </ul>
         ) : (
           <p>No reviews yet.</p>
         )}
 
-        {user && allowedRoles.includes(user.role) ? (
+        {user && userRole === "user" && (
           <form onSubmit={handleReviewSubmit} className="mt-4">
             <textarea
               value={newReview.comment}
@@ -103,10 +142,6 @@ const ListPopup = ({ list, closePopup }) => {
               Submit Review
             </button>
           </form>
-        ) : (
-          <p className="text-red-500 mt-4">
-            You are not authorized to add reviews.
-          </p>
         )}
 
         <button
