@@ -6,6 +6,7 @@ const ListPopup = ({ list, closePopup }) => {
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState({ comment: "", rating: 0 });
   const [error, setError] = useState("");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const { user, token } = useAuth();
 
   const allowedRoles = ["user", "admin", "manager"];
@@ -29,6 +30,13 @@ const ListPopup = ({ list, closePopup }) => {
       setError("Comment and rating are required.");
       return;
     }
+
+    // Show confirmation dialog
+    setShowConfirmDialog(true);
+  };
+
+  const confirmSubmitReview = async () => {
+    setShowConfirmDialog(false); // Hide the confirmation dialog
 
     try {
       // Call API to add review
@@ -55,6 +63,8 @@ const ListPopup = ({ list, closePopup }) => {
           <ul className="mt-2">
             {reviews.map((review, index) => (
               <li key={index} className="border-b py-2">
+                <strong>Nickname:</strong> {review.nickname}
+                <br />
                 <strong>Rating:</strong> {review.rating}/5
                 <br />
                 <strong>Comment:</strong> {review.comment}
@@ -106,6 +116,34 @@ const ListPopup = ({ list, closePopup }) => {
           Close
         </button>
       </div>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded shadow-md w-80">
+            <h4 className="text-lg font-semibold mb-4">
+              Confirm Submit Review
+            </h4>
+            <p className="text-sm mb-4">
+              Are you sure you want to submit this review?
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowConfirmDialog(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded mr-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmSubmitReview}
+                className="px-4 py-2 bg-green-500 text-white rounded"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

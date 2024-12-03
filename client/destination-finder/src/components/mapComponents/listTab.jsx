@@ -146,6 +146,9 @@ const ListsTab = ({ onEditList, onOpenCreateList, handleOpenPopup }) => {
             <p className="text-sm text-gray-100">
               Created by: {list.nickname || "Unknown"}
             </p>
+            <p className="text-sm text-gray-100">
+              Average Rating: {list.averageRating?.toFixed(2) || "N/A"}
+            </p>
             <p className="text-sm text-gray-100">{list.description}</p>
             {list.destinations.length > 0 ? (
               <ul className="text-sm text-gray-200 ml-4">

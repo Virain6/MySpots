@@ -61,6 +61,7 @@ router.post("/reviews", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "List not found" });
     }
 
+    // Add the new review
     const newReview = {
       listID: listRef,
       userID: db.collection("users").doc(req.user.uid),
@@ -73,7 +74,31 @@ router.post("/reviews", verifyToken, async (req, res) => {
     const reviewRef = await db.collection("reviews").add(newReview);
     console.log("Review added successfully:", reviewRef.id);
 
-    res.status(201).json({ id: reviewRef.id, ...newReview });
+    // Fetch all reviews for this list
+    const reviewsSnapshot = await db
+      .collection("reviews")
+      .where("listID", "==", listRef)
+      .get();
+
+    if (reviewsSnapshot.empty) {
+      console.error("No reviews found for this list.");
+      return res.status(404).json({ error: "No reviews found for this list." });
+    }
+
+    // Calculate the new average rating
+    const totalReviews = reviewsSnapshot.docs.length;
+    const totalRating = reviewsSnapshot.docs.reduce((sum, doc) => {
+      const reviewData = doc.data();
+      return sum + (reviewData.rating || 0); // Ensure rating exists
+    }, 0);
+
+    const averageRating = totalReviews > 0 ? totalRating / totalReviews : 0;
+
+    // Update the list's averageRating
+    await listRef.update({ averageRating });
+    console.log("Updated average rating:", averageRating);
+
+    res.status(201).json({ id: reviewRef.id, ...newReview, averageRating });
   } catch (error) {
     console.error("Error adding review:", error.message);
     res.status(500).json({ error: "Failed to add review" });
