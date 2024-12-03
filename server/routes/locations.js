@@ -2,48 +2,81 @@ const express = require("express");
 const { db } = require("../firebaseAdmin"); // Import Firestore instance
 const router = express.Router();
 
-// Fetch locations with optional filters and limits
 router.get("/locations", async (req, res) => {
   console.log("API: GET /locations called");
   const { name, region, country, limit } = req.query;
 
   try {
-    let query = db.collection("destinations");
+    let queries = [];
     console.log("Filters received:", { name, region, country, limit });
 
-    // Partial match and case-insensitive filters
+    // Partial match queries for each field
     if (name) {
       console.log(`Applying name filter: ${name}`);
-      query = query
-        .where("nameLowercase", ">=", name.toLowerCase())
-        .where("nameLowercase", "<=", name.toLowerCase() + "\uf8ff");
+      queries.push(
+        db
+          .collection("destinations")
+          .where("nameLowercase", ">=", name.toLowerCase())
+          .where("nameLowercase", "<=", name.toLowerCase() + "\uf8ff")
+          .get()
+      );
     }
     if (region) {
       console.log(`Applying region filter: ${region}`);
-      query = query
-        .where("regionLowercase", ">=", region.toLowerCase())
-        .where("regionLowercase", "<=", region.toLowerCase() + "\uf8ff");
+      queries.push(
+        db
+          .collection("destinations")
+          .where("regionLowercase", ">=", region.toLowerCase())
+          .where("regionLowercase", "<=", region.toLowerCase() + "\uf8ff")
+          .get()
+      );
     }
     if (country) {
       console.log(`Applying country filter: ${country}`);
-      query = query
-        .where("countryLowercase", ">=", country.toLowerCase())
-        .where("countryLowercase", "<=", country.toLowerCase() + "\uf8ff");
+      queries.push(
+        db
+          .collection("destinations")
+          .where("countryLowercase", ">=", country.toLowerCase())
+          .where("countryLowercase", "<=", country.toLowerCase() + "\uf8ff")
+          .get()
+      );
     }
 
-    // Limit the results
-    if (limit) {
-      console.log(`Applying limit: ${limit}`);
-      query = query.limit(parseInt(limit));
+    let locations = [];
+    if (queries.length === 0) {
+      // If no filters are provided, fetch all documents with a limit
+      console.log("No filters provided, fetching all documents.");
+      const allDocs = await db
+        .collection("destinations")
+        .limit(parseInt(limit || 5)) // Default limit to 5 if not specified
+        .get();
+      locations = allDocs.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+    } else {
+      // Handle filtered results
+      const querySnapshots = await Promise.all(queries);
+
+      // Combine results from all queries
+      const combinedResults = new Map();
+      querySnapshots.forEach((snapshot) => {
+        snapshot.docs.forEach((doc) => {
+          combinedResults.set(doc.id, {
+            id: doc.id,
+            ...doc.data(),
+          });
+        });
+      });
+
+      // Convert the Map back to an array and apply the limit
+      locations = Array.from(combinedResults.values()).slice(
+        0,
+        parseInt(limit || 5) // Default limit to 5 if not specified
+      );
     }
 
-    const locationsSnapshot = await query.get();
-    const locations = locationsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    console.log(`Fetched ${locations.length} location(s)`);
+    console.log(`Fetched ${locations.length} location(s).`);
     res.status(200).json(locations);
   } catch (error) {
     console.error("Error fetching locations:", error.message);
