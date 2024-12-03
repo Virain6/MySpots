@@ -67,6 +67,27 @@ const Navbar = () => {
         {isLoggedIn && (
           <div className="hidden lg:flex items-center space-x-6">
             <Link
+              to="/privacy-policy"
+              className="block px-4 py-2 hover:bg-gray-600"
+              onClick={() => setPolicyDropdownOpen(false)}
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              to="/dmca-policy"
+              className="block px-4 py-2 hover:bg-gray-600"
+              onClick={() => setPolicyDropdownOpen(false)}
+            >
+              DMCA Policy
+            </Link>
+            <Link
+              to="/acceptable-use"
+              className="block px-4 py-2 hover:bg-gray-600"
+              onClick={() => setPolicyDropdownOpen(false)}
+            >
+              Acceptable Use Policy
+            </Link>
+            <Link
               to="/map"
               className="text-slate-400 hover:text-green-600 px-3 py-2 text-base font-medium"
             >
@@ -111,6 +132,27 @@ const Navbar = () => {
         {/* Desktop Menu for not logged in */}
         {!isLoggedIn && (
           <div className="hidden lg:flex space-x-6">
+            <Link
+              to="/privacy-policy"
+              className="block px-4 py-2 hover:bg-gray-600"
+              onClick={() => setPolicyDropdownOpen(false)}
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              to="/dmca-policy"
+              className="block px-4 py-2 hover:bg-gray-600"
+              onClick={() => setPolicyDropdownOpen(false)}
+            >
+              DMCA Policy
+            </Link>
+            <Link
+              to="/acceptable-use"
+              className="block px-4 py-2 hover:bg-gray-600"
+              onClick={() => setPolicyDropdownOpen(false)}
+            >
+              Acceptable Use Policy
+            </Link>
             <Link
               to="/login"
               className="text-slate-400 hover:text-green-600 px-3 py-2 text-base font-medium"
@@ -183,6 +225,27 @@ const Navbar = () => {
               </Link>
             </>
           )}
+          <Link
+            to="/privacy-policy"
+            className="block py-2 px-4 hover:bg-purple-400"
+            onClick={() => setMenuOpen(false)}
+          >
+            Privacy Policy
+          </Link>
+          <Link
+            to="/dmca-policy"
+            className="block py-2 px-4 hover:bg-purple-400"
+            onClick={() => setMenuOpen(false)}
+          >
+            DMCA Policy
+          </Link>
+          <Link
+            to="/acceptable-use"
+            className="block py-2 px-4 hover:bg-purple-400"
+            onClick={() => setMenuOpen(false)}
+          >
+            Acceptable Use Policy
+          </Link>
         </div>
       )}
     </nav>

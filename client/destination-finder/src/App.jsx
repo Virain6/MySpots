@@ -7,6 +7,9 @@ import SignUpPage from "./components/signup";
 import LeafletMap from "./components/map";
 import AccountSettings from "./components/accountSettings";
 import AdminDashboard from "./components/adminDashboard";
+import AcceptableUse from "./components/privacyPolocies/AcceptableUse";
+import DMCA from "./components/privacyPolocies/DMCA";
+import PrivacyPolicy from "./components/privacyPolocies/PrivacyPolicy";
 function App() {
   return (
     <Router>
@@ -19,6 +22,9 @@ function App() {
           <Route path="/map" element={<LeafletMap />} />
           <Route path="/account-settings" element={<AccountSettings />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/acceptable-use" element={<AcceptableUse />} />
+          <Route path="/dmca-policy" element={<DMCA />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
       </div>
     </Router>
