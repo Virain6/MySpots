@@ -20,8 +20,28 @@ router.post("/login", async (req, res) => {
 
       return res.status(403).json({
         error: "Email not verified. Please verify your email to log in.",
-        verificationLink, // Send the link in the response
+        verificationLink,
       });
+    }
+
+    // Check Firestore for the disabled field
+    const userDoc = await admin
+      .firestore()
+      .collection("users")
+      .doc(user.uid)
+      .get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const userData = userDoc.data();
+    if (userData.disabled) {
+      return res
+        .status(403)
+        .json({
+          error:
+            "Your account is disabled. Please contact the Administrator at admin@admin.com",
+        });
     }
 
     const customToken = await admin.auth().createCustomToken(user.uid);

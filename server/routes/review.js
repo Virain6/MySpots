@@ -45,17 +45,27 @@ router.post("/reviews", verifyToken, async (req, res) => {
   const { listID, comment, rating, hidden } = req.body;
 
   if (!listID || !comment || !rating) {
+    console.error("Missing required fields: listID, comment, or rating");
     return res
       .status(400)
       .json({ error: "listID, comment, and rating are required" });
   }
 
   try {
+    // Validate listID as a proper Firestore document reference
+    const listRef = db.collection("lists").doc(listID);
+    const listDoc = await listRef.get();
+
+    if (!listDoc.exists) {
+      console.error(`List with ID ${listID} not found`);
+      return res.status(404).json({ error: "List not found" });
+    }
+
     const newReview = {
-      listID: db.doc(listID),
-      userID: db.doc(`users/${req.user.uid}`),
+      listID: listRef,
+      userID: db.collection("users").doc(req.user.uid),
       comment,
-      rating,
+      rating: parseFloat(rating), // Ensure rating is stored as a number
       hidden: !!hidden, // Defaults to false if not provided
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
@@ -83,7 +93,8 @@ router.get("/reviews/:listID", verifyToken, async (req, res) => {
   try {
     const userRole = await getUserRole(req.user.uid);
 
-    let query = db.collection("reviews").where("listID", "==", db.doc(listID));
+    const listRef = db.collection("lists").doc(listID); // Construct the list reference
+    let query = db.collection("reviews").where("listID", "==", listRef);
 
     // Restrict to non-hidden reviews for regular users
     if (userRole !== "admin" && userRole !== "manager") {
@@ -92,10 +103,24 @@ router.get("/reviews/:listID", verifyToken, async (req, res) => {
 
     const reviewsSnapshot = await query.get();
 
-    const reviews = reviewsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    // Fetch reviews and map user nicknames
+    const reviews = await Promise.all(
+      reviewsSnapshot.docs.map(async (doc) => {
+        const review = doc.data();
+
+        // Fetch the reviewer's nickname
+        const userDoc = await review.userID.get();
+        const userNickname = userDoc.exists
+          ? userDoc.data().nickname
+          : "Anonymous";
+
+        return {
+          id: doc.id,
+          nickname: userNickname,
+          ...review,
+        };
+      })
+    );
 
     console.log("Reviews fetched successfully");
     res.status(200).json(reviews);

@@ -6,6 +6,7 @@ import LoginPage from "./components/login";
 import SignUpPage from "./components/signup";
 import LeafletMap from "./components/map";
 import AccountSettings from "./components/accountSettings";
+import AdminDashboard from "./components/adminDashboard";
 function App() {
   return (
     <Router>
@@ -17,6 +18,7 @@ function App() {
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/map" element={<LeafletMap />} />
           <Route path="/account-settings" element={<AccountSettings />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
         </Routes>
       </div>
     </Router>

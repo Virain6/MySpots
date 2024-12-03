@@ -8,6 +8,7 @@ const locationsRoute = require("./routes/locations");
 const listsRoute = require("./routes/lists");
 const usersRoute = require("./routes/users"); // Add users route
 const reviewRoute = require("./routes/review");
+const adminRoute = require("./routes/admin"); // Admin route
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use("/api", locationsRoute);
 app.use("/api", listsRoute);
 app.use("/api", usersRoute); // Register users route
 app.use("/api", reviewRoute); // Register routes route
+app.use("/api/admin", adminRoute); // Prefix admin routes with /api/admin
 
 // Start the Server
 const PORT = 3001;

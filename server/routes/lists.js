@@ -162,6 +162,7 @@ router.get("/lists", verifyToken, async (req, res) => {
     const listsSnapshot = await db
       .collection("lists")
       .where("userID", "==", req.user.uid)
+      .orderBy("updatedAt", "desc") // Sort by modification date (most recent first)
       .get();
 
     const lists = await Promise.all(
@@ -186,6 +187,8 @@ router.get("/lists/public", async (req, res) => {
     const publicListsSnapshot = await db
       .collection("lists")
       .where("isPublic", "==", true)
+      .orderBy("updatedAt", "desc") // Sort by updatedAt descending
+      .limit(10) // Limit to 10 results
       .get();
 
     const publicLists = await Promise.all(
@@ -202,7 +205,6 @@ router.get("/lists/public", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch public lists" });
   }
 });
-
 // Update list
 router.put("/lists/:id", verifyToken, async (req, res) => {
   console.log("API: PUT /lists/:id called");

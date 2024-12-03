@@ -1,7 +1,24 @@
-// api.js
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../assets/firebase/firebase";
 
+// Base URL for the API
+const API_BASE_URL = "http://localhost:3001/api";
+
+// Endpoints
+const ENDPOINTS = {
+  LOGIN: `${API_BASE_URL}/login`,
+  LISTS: `${API_BASE_URL}/lists`,
+  PUBLIC_LISTS: `${API_BASE_URL}/lists/public`,
+  USER_PROFILE: `${API_BASE_URL}/users/profile`,
+  UPDATE_PASSWORD: `${API_BASE_URL}/users/update-password`,
+  REVIEWS: `${API_BASE_URL}/reviews`,
+  DESTINATIONS: `${API_BASE_URL}/locations`,
+  LOCATIONS: `${API_BASE_URL}/destinations`,
+  ADMIN_USERS: `${API_BASE_URL}/admin/users`,
+  ADMIN: `${API_BASE_URL}/admin`, // Base admin endpoint
+};
+
+// Login user
 export const loginUser = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(
@@ -10,22 +27,29 @@ export const loginUser = async (email, password) => {
       password
     );
 
-    const response = await fetch("http://localhost:3001/api/login", {
+    const response = await fetch(ENDPOINTS.LOGIN, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      if (response.status === 403 && errorData.verificationLink) {
-        // If the email is unverified, return the verification link
-        throw new Error(errorData.verificationLink);
-      } else {
-        throw new Error(errorData.error || "Failed to log in");
+
+      // Check if the user is disabled
+      if (
+        response.status === 403 &&
+        errorData.error === "Your account is disabled. Please contact support."
+      ) {
+        throw new Error("Your account is disabled. Please contact support.");
       }
+
+      // Handle unverified email with a verification link
+      if (response.status === 403 && errorData.verificationLink) {
+        throw new Error(errorData.verificationLink);
+      }
+
+      throw new Error(errorData.error || "Failed to log in");
     }
 
     const data = await response.json();
@@ -37,14 +61,100 @@ export const loginUser = async (email, password) => {
   }
 };
 
-//delete list
-export const deleteList = async (token, listId) => {
+// Fetch users (Admin Dashboard)
+export const fetchAdminUsers = async (token) => {
   try {
-    const response = await fetch(`http://localhost:3001/api/lists/${listId}`, {
+    const response = await fetch(ENDPOINTS.ADMIN_USERS, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch users");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching users:", error.message);
+    throw error;
+  }
+};
+
+// Update user role (Admin Dashboard)
+export const updateAdminUserRole = async (token, userId, newRole) => {
+  try {
+    const response = await fetch(`${ENDPOINTS.ADMIN_USERS}/${userId}/role`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ role: newRole }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update user role");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating user role:", error.message);
+    throw error;
+  }
+};
+
+// Delete a user (Admin Dashboard)
+export const deleteAdminUser = async (token, userId) => {
+  try {
+    const response = await fetch(`${ENDPOINTS.ADMIN_USERS}/${userId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to delete user");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error deleting user:", error.message);
+    throw error;
+  }
+};
+
+// Enable or disable a user account
+export const toggleUserDisabled = async (token, userId, disabled) => {
+  try {
+    const response = await fetch(`${ENDPOINTS.ADMIN}/users/${userId}/disable`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ disabled }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update user disabled state.");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating user disabled state:", error.message);
+    throw error;
+  }
+};
+
+// Delete list
+export const deleteList = async (token, listId) => {
+  try {
+    const response = await fetch(`${ENDPOINTS.LISTS}/${listId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!response.ok) {
@@ -59,6 +169,7 @@ export const deleteList = async (token, listId) => {
   }
 };
 
+// Fetch locations
 export const fetchLocations = async (filters = {}, limit = 5) => {
   try {
     const queryParams = new URLSearchParams({
@@ -68,9 +179,7 @@ export const fetchLocations = async (filters = {}, limit = 5) => {
       limit: limit.toString(),
     });
 
-    const response = await fetch(
-      `http://localhost:3001/api/locations?${queryParams}`
-    );
+    const response = await fetch(`${ENDPOINTS.DESTINATIONS}?${queryParams}`);
     if (!response.ok) {
       throw new Error("Failed to fetch locations");
     }
@@ -81,12 +190,11 @@ export const fetchLocations = async (filters = {}, limit = 5) => {
   }
 };
 
+// Fetch user profile
 export const fetchUserProfile = async (token) => {
   try {
-    const response = await fetch("http://localhost:3001/api/users/profile", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await fetch(ENDPOINTS.USER_PROFILE, {
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!response.ok) {
@@ -103,60 +211,70 @@ export const fetchUserProfile = async (token) => {
 // Fetch reviews for a list
 export const fetchReviews = async (listId, token) => {
   if (!token) throw new Error("Authentication token is missing.");
-  const response = await fetch(
-    `http://localhost:3001/api/lists/${listId}/reviews`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`, // Include the Bearer token
-      },
+  try {
+    const response = await fetch(`${ENDPOINTS.REVIEWS}/${listId}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to fetch reviews.");
     }
-  );
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to fetch reviews.");
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching reviews:", error.message);
+    throw error;
   }
-
-  return response.json();
 };
+
 // Add a new review
 export const addReview = async (listID, review, token) => {
-  const response = await fetch("http://localhost:3001/api/reviews", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ ...review, listID }),
-  });
-  if (!response.ok) throw new Error("Failed to add review.");
-  return response.json();
-};
-
-export const updatePassword = async (
-  token,
-  { currentPassword, newPassword }
-) => {
-  const response = await fetch(
-    "http://localhost:3001/api/users/update-password",
-    {
+  try {
+    const response = await fetch(ENDPOINTS.REVIEWS, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ currentPassword, newPassword }),
+      body: JSON.stringify({ listID, ...review }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to add review.");
     }
-  );
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error adding review:", error.message);
+    throw error;
+  }
+};
+
+// Update password
+export const updatePassword = async (
+  token,
+  { currentPassword, newPassword }
+) => {
+  const response = await fetch(ENDPOINTS.UPDATE_PASSWORD, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
   if (!response.ok) {
     throw new Error("Failed to update password");
   }
 };
 
+// Fetch user-specific lists
 export const fetchUserLists = async (token) => {
-  console.log("Token being sent:", token); // Debugging log
   try {
-    const response = await fetch("http://localhost:3001/api/lists", {
+    const response = await fetch(ENDPOINTS.LISTS, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!response.ok) {
@@ -169,22 +287,24 @@ export const fetchUserLists = async (token) => {
   }
 };
 
+// Fetch public lists
 export const fetchPublicLists = async () => {
   try {
-    const response = await fetch("http://localhost:3001/api/lists/public");
+    const response = await fetch(ENDPOINTS.PUBLIC_LISTS);
     if (!response.ok) {
       throw new Error("Failed to fetch public lists");
     }
-    return await response.json();
+    return await response.json(); // Backend already limits and sorts
   } catch (error) {
     console.error("Error fetching public lists:", error);
     return [];
   }
 };
 
+// Create a new list
 export const createList = async (token, listData) => {
   try {
-    const response = await fetch("http://localhost:3001/api/lists", {
+    const response = await fetch(ENDPOINTS.LISTS, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -204,19 +324,17 @@ export const createList = async (token, listData) => {
   }
 };
 
+// Add destination to a list
 export const addDestinationToList = async (token, listId, destinationId) => {
   try {
-    const response = await fetch(
-      `http://localhost:3001/api/lists/${listId}/destinations`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ destinationId }),
-      }
-    );
+    const response = await fetch(`${ENDPOINTS.LISTS}/${listId}/destinations`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ destinationId }),
+    });
 
     if (!response.ok) {
       throw new Error("Failed to add destination to list");
@@ -229,9 +347,10 @@ export const addDestinationToList = async (token, listId, destinationId) => {
   }
 };
 
+// Fetch destinations
 export const fetchDestinations = async (destinationIds) => {
   try {
-    const response = await fetch("http://localhost:3001/api/destinations", {
+    const response = await fetch(ENDPOINTS.LOCATIONS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: destinationIds }),
@@ -248,24 +367,22 @@ export const fetchDestinations = async (destinationIds) => {
   }
 };
 
+// Update list details
 export const updateListDetails = async (token, updatedList) => {
   try {
-    const response = await fetch(
-      `http://localhost:3001/api/lists/${updatedList.id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: updatedList.name,
-          description: updatedList.description,
-          isPublic: updatedList.isPublic,
-          destinationIds: updatedList.destinations.map((d) => d.id),
-        }),
-      }
-    );
+    const response = await fetch(`${ENDPOINTS.LISTS}/${updatedList.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        name: updatedList.name,
+        description: updatedList.description,
+        isPublic: updatedList.isPublic,
+        destinationIds: updatedList.destinations.map((d) => d.id),
+      }),
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to update list: ${response.statusText}`);

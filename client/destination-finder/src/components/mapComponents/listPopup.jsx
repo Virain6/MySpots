@@ -31,11 +31,16 @@ const ListPopup = ({ list, closePopup }) => {
     }
 
     try {
-      await addReview(list.id, newReview, token);
-      setReviews([...reviews, { ...newReview, userID: user.uid }]);
+      // Call API to add review
+      const addedReview = await addReview(list.id, newReview, token);
+
+      // Append the added review to the list
+      setReviews([...reviews, { ...addedReview, userID: user.uid }]);
       setNewReview({ comment: "", rating: 0 });
+      setError(""); // Clear any previous errors
     } catch (err) {
-      setError("Failed to add review.");
+      console.error("Error adding review:", err.message);
+      setError("Failed to add review. Please try again.");
     }
   };
 
